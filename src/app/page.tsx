@@ -52,7 +52,7 @@ export default function LandingPage() {
               <CheckCircle className="text-green-600" size={32} />
             </div>
             <CardTitle className="text-2xl text-gray-900">
-              ¡Te Registraste exitosamente!
+              ¡Registro exitoso!
             </CardTitle>
           </CardHeader>
           
