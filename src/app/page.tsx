@@ -58,7 +58,8 @@ export default function LandingPage() {
           
           <CardContent>
             <p className="text-gray-600 mb-6">
-              Hemos enviado un email de verificación a tu correo. 
+              Hemos enviado un email de verificación a tu correo,
+              revisa en tu bandeja de entrada o en spam y
               Haz clic en el enlace para activar tu cuenta.
             </p>
             
