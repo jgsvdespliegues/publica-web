@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Edit3, Plus, LogOut, Eye, Trash2, CheckCircle } from 'lucide-react'
+import { Eye, LogOut, Edit, Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface StoreData {
+interface Store {
   id: string
   slug: string
   name: string
@@ -19,103 +18,202 @@ interface StoreData {
   whatsappUrl?: string
 }
 
-interface CardData {
+interface Card {
   id: string
   title: string
   description: string
   image1Url?: string
   image2Url?: string
   image3Url?: string
+  orderPosition: number
 }
 
-export default function AdminMainPage() {
+const AdminMain = () => {
+  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { data: session, status } = useSession()
   const slug = params.slug as string
-  
-  const [store, setStore] = useState<StoreData | null>(null)
-  const [cards, setCards] = useState<CardData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [loginError, setLoginError] = useState<string | null>(null)
-  const [loginLoading, setLoginLoading] = useState(false)
-  const [showVerificationAlert, setShowVerificationAlert] = useState(false)
 
-  // Verificar si viene de verificación exitosa
-  useEffect(() => {
-    if (searchParams.get('verified') === 'true') {
-      setShowVerificationAlert(true)
-      // Limpiar el parámetro de la URL
-      const newUrl = `/${slug}/admin`
-      window.history.replaceState({}, '', newUrl)
+  const [store, setStore] = useState<Store | null>(null)
+  const [cards, setCards] = useState<Card[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Estilos CSS en línea para garantizar aplicación
+  const styles = {
+    body: {
+      backgroundColor: '#1e293b',
+      minHeight: '100vh',
+      margin: 0,
+      padding: 0,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      backgroundColor: '#ffffff',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      borderBottom: '4px solid #60a5fa',
+      marginBottom: '2rem'
+    },
+    headerContent: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '1.5rem 1rem',
+      textAlign: 'center' as const
+    },
+    title: {
+      fontSize: '2rem',
+      fontWeight: 'bold',
+      color: '#1e293b',
+      margin: 0
+    },
+    main: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '0 1rem 2rem 1rem'
+    },
+    card: {
+      backgroundColor: '#ffffff',
+      borderRadius: '0.5rem',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #60a5fa',
+      padding: '1.5rem',
+      marginBottom: '1.5rem'
+    },
+    sectionTitle: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      textAlign: 'center' as const,
+      marginBottom: '1.5rem'
+    },
+    productCard: {
+      backgroundColor: '#ffffff',
+      border: '2px solid #60a5fa',
+      borderRadius: '0.5rem',
+      padding: '1.5rem',
+      marginBottom: '1rem',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+    },
+    productTitle: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      textAlign: 'center' as const,
+      marginBottom: '1rem'
+    },
+    productImage: {
+      width: '128px',
+      height: '128px',
+      backgroundColor: '#f3f4f6',
+      border: '2px solid #60a5fa',
+      borderRadius: '0.5rem',
+      margin: '0 auto 1rem auto',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    productDescription: {
+      color: '#1e293b',
+      textAlign: 'center' as const,
+      marginBottom: '1.5rem',
+      lineHeight: '1.6'
+    },
+    buttonContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '1rem',
+      flexWrap: 'wrap' as const
+    },
+    button: {
+      backgroundColor: '#3b82f6',
+      color: '#ffffff',
+      border: 'none',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'background-color 0.2s'
+    },
+    buttonRed: {
+      backgroundColor: '#ef4444',
+      color: '#ffffff',
+      border: 'none',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'background-color 0.2s'
+    },
+    infoText: {
+      color: '#1e293b',
+      textAlign: 'center' as const,
+      marginBottom: '0.5rem'
+    },
+    footer: {
+      backgroundColor: '#1e293b',
+      borderTop: '4px solid #60a5fa',
+      marginTop: '2rem',
+      padding: '1rem',
+      textAlign: 'center' as const
+    },
+    footerText: {
+      color: '#ffffff',
+      fontSize: '0.875rem',
+      margin: 0
     }
-  }, [searchParams, slug])
+  }
+
+  useEffect(() => {
+    // Aplicar estilos al body
+    document.body.style.backgroundColor = styles.body.backgroundColor
+    document.body.style.minHeight = styles.body.minHeight
+    document.body.style.margin = styles.body.margin.toString()
+    document.body.style.padding = styles.body.padding.toString()
+    document.body.style.fontFamily = styles.body.fontFamily
+
+    return () => {
+      // Limpiar estilos al desmontar
+      document.body.style.backgroundColor = ''
+      document.body.style.minHeight = ''
+      document.body.style.margin = ''
+      document.body.style.padding = ''
+      document.body.style.fontFamily = ''
+    }
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
 
-    if (session?.user) {
-      // Usuario logueado, cargar datos
-      fetchStoreData()
-    } else {
-      setLoading(false)
+    if (!session) {
+      router.push(`/${slug}/auth/signin`)
+      return
     }
-  }, [session, status])
+
+    fetchStoreData()
+  }, [session, status, slug])
 
   const fetchStoreData = async () => {
     try {
       const response = await fetch(`/api/cards?store=${slug}`)
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar datos')
+      if (response.ok) {
+        const data = await response.json()
+        setStore(data.store)
+        setCards(data.cards)
       }
-
-      const data = await response.json()
-      setStore(data.store)
-      setCards(data.cards)
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching store data:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginLoading(true)
-    setLoginError(null)
-
-    try {
-      const result = await signIn('credentials', {
-        email: loginData.email,
-        password: loginData.password,
-        storeSlug: slug,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setLoginError('Credenciales incorrectas o cuenta no verificada')
-      } else if (result?.ok) {
-        // Login exitoso, recargar la página
-        window.location.reload()
-      }
-    } catch (error) {
-      setLoginError('Error de conexión')
-    } finally {
-      setLoginLoading(false)
-    }
-  }
-
   const handleDeleteCard = async (cardId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta card?')) {
-      return
-    }
+    if (!confirm('¿Estás seguro de que quieres eliminar esta card?')) return
 
     try {
       const response = await fetch(`/api/cards?id=${cardId}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       })
 
       if (response.ok) {
@@ -124,352 +222,145 @@ export default function AdminMainPage() {
         alert('Error al eliminar la card')
       }
     } catch (error) {
-      alert('Error de conexión')
+      console.error('Error deleting card:', error)
+      alert('Error al eliminar la card')
     }
-  }
-
-  const truncateText = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text
-    return text.substring(0, maxLength) + '...'
-  }
-
-  // Vista de login
-  if (status !== 'loading' && !session?.user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-gray-900">
-              Acceso Administrativo
-            </CardTitle>
-            <p className="text-gray-600">Ingresa a tu panel de control</p>
-          </CardHeader>
-          
-          <CardContent>
-            {/* Alerta de verificación exitosa */}
-            {showVerificationAlert && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="text-green-600" size={20} />
-                  <p className="text-green-800 font-medium">
-                    ¡Cuenta verificada exitosamente!
-                  </p>
-                </div>
-                <p className="text-green-700 text-sm mt-1">
-                  Ya puedes acceder a tu panel de administración.
-                </p>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="tu@email.com"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Tu contraseña"
-                />
-              </div>
-
-              {loginError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-red-700 text-sm">{loginError}</p>
-                </div>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                disabled={loginLoading}
-              >
-                {loginLoading ? 'Ingresando...' : 'Ingresar'}
-              </Button>
-            </form>
-
-            <div className="mt-6 pt-6 border-t text-center">
-              <Link 
-                href={`/${slug}`}
-                className="text-purple-600 hover:text-purple-700 text-sm"
-              >
-                Ver tienda pública
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando panel...</p>
+      <div style={styles.body}>
+        <div style={styles.main}>
+          <div style={styles.card}>
+            <p style={styles.infoText}>Cargando...</p>
+          </div>
         </div>
       </div>
     )
   }
 
-  // Vista administrativa
   return (
-    <div className="min-h-screen bg-background-primary">
+    <div style={styles.body}>
       {/* Header */}
-      <header className="bg-surface-primary shadow-lg border-b-2 border-accent-primary">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          {/* Mobile Layout */}
-          <div className="flex flex-col space-y-4 md:hidden">
-            <h1 className="text-2xl font-bold text-accent-primary text-center">Panel de Control</h1>
-            {store && (
-              <p className="text-center text-text-secondary font-medium">
-                {store.name}
-              </p>
-            )}
-            
-            <div className="flex space-x-2">
-              <Link href={`/${slug}`} target="_blank" className="flex-1">
-                <Button variant="outline" className="w-full flex items-center justify-center space-x-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white">
-                  <Eye size={16} />
-                  <span>Ver tienda</span>
-                </Button>
-              </Link>
-              
-              <Button
-                variant="outline"
-                onClick={() => signOut()}
-                className="flex-1 flex items-center justify-center space-x-2 text-red-600 border-red-300 hover:bg-red-50"
-              >
-                <LogOut size={16} />
-                <span>Salir</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-accent-primary">Panel de Control</h1>
-              {store && (
-                <span className="text-text-secondary">- {store.name}</span>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link href={`/${slug}`} target="_blank">
-                <Button variant="outline" className="flex items-center space-x-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white">
-                  <Eye size={16} />
-                  <span>Ver tienda</span>
-                </Button>
-              </Link>
-              
-              <Button
-                variant="ghost"
-                onClick={() => signOut()}
-                className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <LogOut size={16} />
-                <span>Salir</span>
-              </Button>
-            </div>
-          </div>
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>
+            {store?.name || 'Panel de Administración'}
+          </h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid gap-8">
-          {/* Header Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Información de la tienda</CardTitle>
-                <p className="text-gray-600 mt-1">Configura el header y footer de tu tienda</p>
-              </div>
-              <Link href={`/${slug}/admin/edit`}>
-                <Button className="flex items-center space-x-2">
-                  <Edit3 size={16} />
-                  <span>Editar</span>
-                </Button>
-              </Link>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Header</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    {store?.logoUrl ? (
-                      <div className="flex items-center space-x-3">
-                        <Image
-                          src={store.logoUrl}
-                          alt="Logo"
-                          width={60}
-                          height={60}
-                          className="rounded-lg"
-                        />
-                        <div>
-                          <p className="font-medium">{store.name}</p>
-                          <p className="text-sm text-gray-600">Logo configurado</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="font-medium">{store?.name}</p>
-                        <p className="text-sm text-gray-600">Solo título (sin logo)</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Footer</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Contacto:</strong> {store?.contactInfo || 'No configurado'}</p>
-                      <p><strong>Instagram:</strong> {store?.instagramUrl ? 'Configurado' : 'No configurado'}</p>
-                      <p><strong>WhatsApp:</strong> {store?.whatsappUrl ? 'Configurado' : 'No configurado'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <main style={styles.main}>
+        
+        {/* Botones principales */}
+        <div style={styles.buttonContainer}>
+          <Link href={`/${slug}`} target="_blank">
+            <button style={styles.button}>
+              Ver Tienda
+            </button>
+          </Link>
+          
+          <Link href={`/${slug}/admin/new`}>
+            <button style={styles.button}>
+              Nueva Card
+            </button>
+          </Link>
+          
+          <button
+            style={styles.buttonRed}
+            onClick={() => signOut()}
+          >
+            Salir
+          </button>
+        </div>
 
-          {/* Cards Section */}
-          <Card className="bg-white shadow-lg border-2 border-blue-200">
-            <CardHeader className="text-center border-b border-blue-100 pb-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="text-center md:text-left mb-4 md:mb-0">
-                  <CardTitle className="text-xl text-blue-600 font-bold">Productos / Cards</CardTitle>
-                  <p className="text-slate-600 mt-1">
-                    {cards.length}/10 cards creadas
-                    {cards.length >= 10 && <span className="text-orange-600 ml-2 font-semibold">• Límite alcanzado</span>}
-                  </p>
+        {/* Productos/Cards */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Productos / Cards</h2>
+          
+          {cards.length === 0 ? (
+            <p style={styles.infoText}>
+              No hay cards creadas. Crea tu primera card para comenzar.
+            </p>
+          ) : (
+            cards.map((card) => (
+              <div key={card.id} style={styles.productCard}>
+                <h3 style={styles.productTitle}>{card.title}</h3>
+                
+                <div style={styles.productImage}>
+                  {card.image1Url ? (
+                    <Image
+                      src={card.image1Url}
+                      alt={card.title}
+                      width={128}
+                      height={128}
+                      style={{ objectFit: 'cover', borderRadius: '0.5rem' }}
+                    />
+                  ) : (
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                      Sin imagen
+                    </span>
+                  )}
                 </div>
                 
-                {cards.length < 10 && (
-                  <Link href={`/${slug}/admin/new`}>
-                    <Button 
-                      className="font-semibold px-6 py-2 flex items-center space-x-2 text-white rounded-lg"
-                      style={{ backgroundColor: '#3b82f6' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                    >
-                      <Plus size={16} />
-                      <span>Nueva Card</span>
-                    </Button>
+                <p style={styles.productDescription}>
+                  {card.description}
+                </p>
+                
+                <div style={styles.buttonContainer}>
+                  <Link href={`/${slug}/admin/edit/${card.id}`}>
+                    <button style={styles.button}>
+                      Editar
+                    </button>
                   </Link>
-                )}
+                  
+                  <button
+                    style={styles.buttonRed}
+                    onClick={() => handleDeleteCard(card.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            </CardHeader>
-            
-            <CardContent className="pt-6">
-              {cards.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-blue-300 rounded-lg bg-slate-50">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                    No tienes cards creadas
-                  </h3>
-                  <p className="text-slate-600 mb-4">
-                    Crea tu primera card para comenzar a mostrar productos
-                  </p>
-                  <Link href={`/${slug}/admin/new`}>
-                    <Button 
-                      className="font-semibold text-white px-6 py-2 rounded-lg"
-                      style={{ backgroundColor: '#3b82f6' }}
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Crear primera card
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid gap-6">
-                  {cards.map((card) => (
-                    <div key={card.id} className="border-2 border-blue-200 rounded-lg p-6 hover:shadow-lg transition-all duration-300 bg-slate-50">
-                      {/* Título centrado */}
-                      <div className="text-center mb-4">
-                        <h3 className="font-bold text-slate-800 text-lg">{card.title}</h3>
-                      </div>
-                      
-                      {/* Imagen centrada */}
-                      {card.image1Url && (
-                        <div className="text-center mb-4">
-                          <Image
-                            src={card.image1Url}
-                            alt={card.title}
-                            width={120}
-                            height={120}
-                            className="rounded-lg object-cover border-2 border-blue-300 mx-auto"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Descripción centrada */}
-                      <div className="text-center mb-6">
-                        <p className="text-slate-600 leading-relaxed">
-                          {truncateText(card.description)}
-                        </p>
-                      </div>
-                      
-                      {/* Botones centrados */}
-                      <div className="flex space-x-2">
-                        <Link href={`/${slug}/admin/edit?cardId=${card.id}`} className="flex-1">
-                          <Button 
-                            variant="outline" 
-                            className="w-full font-medium text-blue-600 border-2 border-blue-500 hover:text-white rounded-lg"
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          >
-                            Editar
-                          </Button>
-                        </Link>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={() => handleDeleteCard(card.id)}
-                          className="flex-1 text-red-600 border-2 border-red-400 hover:bg-red-50 font-medium rounded-lg"
-                        >
-                          Eliminar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            ))
+          )}
+        </div>
+
+        {/* Información de la Tienda */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Información de la Tienda</h2>
+          <div style={styles.infoText}>
+            <p><strong>Nombre:</strong> {store?.name}</p>
+            {store?.contactInfo && (
+              <p><strong>Contacto:</strong> {store.contactInfo}</p>
+            )}
+            {store?.instagramUrl && (
+              <p><strong>Instagram:</strong> {store.instagramUrl}</p>
+            )}
+            {store?.whatsappUrl && (
+              <p><strong>WhatsApp:</strong> {store.whatsappUrl}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Header / Footer */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Header / Footer</h2>
+          <p style={styles.infoText}>
+            Configuración del encabezado y pie de página
+          </p>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Desarrollado por @vstecnic by Juan G. Soto
-            </p>
-          </div>
-        </div>
+      <footer style={styles.footer}>
+        <p style={styles.footerText}>
+          Desarrollado por @vstecnic by Juan G. Soto
+        </p>
       </footer>
     </div>
   )
 }
+
+export default AdminMain
