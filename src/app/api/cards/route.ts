@@ -4,6 +4,24 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { deleteFromCloudinary } from '@/lib/cloudinary'
 
+// Interfaces para tipar los request bodies
+interface CreateCardBody {
+  title: string;
+  description: string;
+  image1Url?: string;
+  image2Url?: string;
+  image3Url?: string;
+}
+
+interface UpdateCardBody {
+  id: string;
+  title: string;
+  description: string;
+  image1Url?: string;
+  image2Url?: string;
+  image3Url?: string;
+}
+
 // GET - Obtener cards de una tienda
 export async function GET(request: NextRequest) {
   try {
@@ -67,7 +85,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, description, image1Url, image2Url, image3Url } = await request.json()
+    const body: CreateCardBody = await request.json()
+    const { title, description, image1Url, image2Url, image3Url } = body
 
     if (!title || !description) {
       return NextResponse.json(
@@ -78,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar límite de 10 cards
     const cardCount = await prisma.card.count({
-      where: { storeId: (session.user as any).storeId }
+      where: { storeId: session.user.storeId } // ← QUITAMOS (session.user as any)
     })
 
     if (cardCount >= 10) {
@@ -90,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Obtener la siguiente posición
     const lastCard = await prisma.card.findFirst({
-      where: { storeId: (session.user as any).storeId },
+      where: { storeId: session.user.storeId }, // ← QUITAMOS (session.user as any)
       orderBy: { orderPosition: 'desc' }
     })
 
@@ -98,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     const card = await prisma.card.create({
       data: {
-        storeId: (session.user as any).storeId,
+        storeId: session.user.storeId, // ← QUITAMOS (session.user as any)
         title,
         description,
         image1Url: image1Url || null,
@@ -131,7 +150,8 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const { id, title, description, image1Url, image2Url, image3Url } = await request.json()
+    const body: UpdateCardBody = await request.json()
+    const { id, title, description, image1Url, image2Url, image3Url } = body
 
     if (!id || !title || !description) {
       return NextResponse.json(
@@ -144,7 +164,7 @@ export async function PUT(request: NextRequest) {
     const existingCard = await prisma.card.findFirst({
       where: {
         id,
-        storeId: (session.user as any).storeId
+        storeId: session.user.storeId // ← QUITAMOS (session.user as any)
       }
     })
 
@@ -203,7 +223,7 @@ export async function DELETE(request: NextRequest) {
     const existingCard = await prisma.card.findFirst({
       where: {
         id: cardId,
-        storeId: (session.user as any).storeId
+        storeId: session.user.storeId // ← QUITAMOS (session.user as any)
       }
     })
 
