@@ -3,24 +3,25 @@ import { DefaultSession, DefaultUser } from "next-auth"
 declare module "next-auth" {
   interface Session {
     user: {
-      storeId: string
-      storeSlug: string
-      storeName: string
-    } & DefaultSession["user"]
+      id: string;  // ← AGREGAMOS el 'id' que faltaba
+      storeId: string;
+      storeSlug: string;
+      storeName: string;
+    } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
-    storeId: string
-    storeSlug: string
-    storeName: string
+    storeId: string;
+    storeSlug: string;
+    storeName: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    storeId: string
-    storeSlug: string
-    storeName: string
+    storeId: string;
+    storeSlug: string;
+    storeName: string;
   }
 }
 

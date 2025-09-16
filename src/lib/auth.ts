@@ -1,34 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { DefaultSession, DefaultUser } from "next-auth"
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
-
-// Extender los tipos de NextAuth
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      storeId: string;
-      storeSlug: string;
-      storeName: string;
-    } & DefaultSession["user"];
-  }
-
-  interface User extends DefaultUser {
-    storeId: string;
-    storeSlug: string;
-    storeName: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    storeId: string;
-    storeSlug: string;
-    storeName: string;
-  }
-}
 
 export const authOptions: NextAuthOptions = {
   providers: [
