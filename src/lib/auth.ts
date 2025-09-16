@@ -1,7 +1,6 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { DefaultSession, DefaultUser } from "next-auth"
-import { JWT } from "next-auth/jwt"
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 
