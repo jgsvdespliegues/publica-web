@@ -1,7 +1,35 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { DefaultSession, DefaultUser } from "next-auth"
+import { JWT } from "next-auth/jwt"
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
+
+// Extender los tipos de NextAuth
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      storeId: string;
+      storeSlug: string;
+      storeName: string;
+    } & DefaultSession["user"];
+  }
+
+  interface User extends DefaultUser {
+    storeId: string;
+    storeSlug: string;
+    storeName: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    storeId: string;
+    storeSlug: string;
+    storeName: string;
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,38 +44,31 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password || !credentials?.storeSlug) {
           return null
         }
-
         try {
           // Buscar la tienda por slug
           const store = await prisma.store.findUnique({
             where: { slug: credentials.storeSlug },
             include: { auth: true }
           })
-
           if (!store || !store.auth) {
             return null
           }
-
           // Verificar que el email coincida
           if (store.auth.email !== credentials.email) {
             return null
           }
-
           // Verificar que la cuenta esté verificada
           if (!store.auth.isVerified) {
             throw new Error("Cuenta no verificada. Revisa tu email.")
           }
-
           // Verificar contraseña
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             store.auth.passwordHash
           )
-
           if (!isPasswordValid) {
             return null
           }
-
           return {
             id: store.auth.id,
             email: store.auth.email,
@@ -69,17 +90,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.storeId = (user as any).storeId
-        token.storeSlug = (user as any).storeSlug
-        token.storeName = (user as any).storeName
+        token.storeId = user.storeId
+        token.storeSlug = user.storeSlug
+        token.storeName = user.storeName
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).storeId = token.storeId;
-        (session.user as any).storeSlug = token.storeSlug;
-        (session.user as any).storeName = token.storeName;
+        session.user.storeId = token.storeId;
+        session.user.storeSlug = token.storeSlug;
+        session.user.storeName = token.storeName;
       }
       return session
     }

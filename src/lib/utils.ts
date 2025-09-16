@@ -29,15 +29,15 @@ export async function isSlugAvailable(slug: string): Promise<boolean> {
 
 // Generar slug único añadiendo números si es necesario
 export async function generateUniqueSlug(name: string): Promise<string> {
-  const baseSlug = generateSlug(name)
+  const baseSlug = generateSlug(name) // Cambiado de 'let' a 'const'
   let slug = baseSlug
   let counter = 1
-
+  
   while (!(await isSlugAvailable(slug))) {
     slug = `${baseSlug}-${counter}`
     counter++
   }
-
+  
   return slug
 }
 
