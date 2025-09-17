@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -193,6 +193,22 @@ const AdminDetail = () => {
     }
   }
 
+  // Memoizar fetchCard para evitar warnings
+  const fetchCard = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/cards?store=${slug}`)
+      if (response.ok) {
+        const data = await response.json()
+        const foundCard = data.cards.find((c: Card) => c.id === cardId)
+        setCard(foundCard || null)
+      }
+    } catch (error) {
+      console.error('Error fetching card:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [slug, cardId])
+
   useEffect(() => {
     // Aplicar estilos al body
     document.body.style.backgroundColor = styles.body.backgroundColor
@@ -209,7 +225,7 @@ const AdminDetail = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, [])
+  }, []) // Sin dependencias - solo aplicar estilos una vez
 
   useEffect(() => {
     if (status === 'loading') return
@@ -220,22 +236,7 @@ const AdminDetail = () => {
     }
 
     fetchCard()
-  }, [session, status, cardId])
-
-  const fetchCard = async () => {
-    try {
-      const response = await fetch(`/api/cards?store=${slug}`)
-      if (response.ok) {
-        const data = await response.json()
-        const foundCard = data.cards.find((c: Card) => c.id === cardId)
-        setCard(foundCard || null)
-      }
-    } catch (error) {
-      console.error('Error fetching card:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [session, status, router, slug, fetchCard]) // Incluir todas las dependencias
 
   const handleDeleteCard = async () => {
     if (!card) return

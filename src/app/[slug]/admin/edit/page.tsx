@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -230,36 +230,8 @@ const AdminEdit = () => {
     }
   }
 
-  useEffect(() => {
-    // Aplicar estilos al body
-    document.body.style.backgroundColor = styles.body.backgroundColor
-    document.body.style.minHeight = styles.body.minHeight
-    document.body.style.margin = styles.body.margin.toString()
-    document.body.style.padding = styles.body.padding.toString()
-    document.body.style.fontFamily = styles.body.fontFamily
-
-    return () => {
-      // Limpiar estilos al desmontar
-      document.body.style.backgroundColor = ''
-      document.body.style.minHeight = ''
-      document.body.style.margin = ''
-      document.body.style.padding = ''
-      document.body.style.fontFamily = ''
-    }
-  }, [])
-
-  useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push(`/${slug}/auth/signin`)
-      return
-    }
-
-    fetchCard()
-  }, [session, status, cardId])
-
-  const fetchCard = async () => {
+  // Memoizar fetchCard para evitar warnings
+  const fetchCard = useCallback(async () => {
     try {
       const response = await fetch(`/api/cards?store=${slug}`)
       if (response.ok) {
@@ -281,7 +253,36 @@ const AdminEdit = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [slug, cardId])
+
+  useEffect(() => {
+    // Aplicar estilos al body
+    document.body.style.backgroundColor = styles.body.backgroundColor
+    document.body.style.minHeight = styles.body.minHeight
+    document.body.style.margin = styles.body.margin.toString()
+    document.body.style.padding = styles.body.padding.toString()
+    document.body.style.fontFamily = styles.body.fontFamily
+
+    return () => {
+      // Limpiar estilos al desmontar
+      document.body.style.backgroundColor = ''
+      document.body.style.minHeight = ''
+      document.body.style.margin = ''
+      document.body.style.padding = ''
+      document.body.style.fontFamily = ''
+    }
+  }, []) // Sin dependencias - solo aplicar estilos una vez
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push(`/${slug}/auth/signin`)
+      return
+    }
+
+    fetchCard()
+  }, [session, status, router, slug, fetchCard]) // Incluir todas las dependencias
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -548,7 +549,7 @@ const AdminEdit = () => {
                 }
               }}
             >
-              {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+              {saving ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>
         </form>

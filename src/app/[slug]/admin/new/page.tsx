@@ -243,7 +243,7 @@ const AdminNew = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, [])
+  }, []) // Sin dependencias - solo aplicar estilos una vez
 
   useEffect(() => {
     if (status === 'loading') return
@@ -252,7 +252,7 @@ const AdminNew = () => {
       router.push(`/${slug}/auth/signin`)
       return
     }
-  }, [session, status, slug])
+  }, [session, status, router, slug]) // Incluir todas las dependencias
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -469,7 +469,7 @@ const AdminNew = () => {
             </div>
             
             <div style={styles.helpText}>
-              💡 <strong>Tip:</strong> Puedes subir hasta 3 imágenes. Las imágenes ayudan a que tus clientes vean mejor tus productos. Formatos: JPG, PNG, WEBP.
+              Tip: Puedes subir hasta 3 imágenes. Las imágenes ayudan a que tus clientes vean mejor tus productos. Formatos: JPG, PNG, WEBP.
             </div>
           </div>
 
@@ -493,7 +493,7 @@ const AdminNew = () => {
                 }
               }}
             >
-              {saving ? 'Creando...' : '🎯 Crear Card'}
+              {saving ? 'Creando...' : 'Crear Card'}
             </button>
           </div>
         </form>
