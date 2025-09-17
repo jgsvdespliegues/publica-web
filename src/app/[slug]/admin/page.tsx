@@ -6,7 +6,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, LogOut, Edit, Trash2, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface Store {
   id: string
@@ -131,8 +130,29 @@ const AdminMain = () => {
       borderRadius: '0.5rem',
       fontWeight: '600',
       cursor: 'pointer',
+      textDecoration: 'none',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-      transition: 'background-color 0.2s'
+      transition: 'background-color 0.2s',
+      fontSize: '0.875rem'
+    },
+    buttonSecondary: {
+      backgroundColor: '#64748b',
+      color: '#ffffff',
+      border: 'none',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      textDecoration: 'none',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'background-color 0.2s',
+      fontSize: '0.875rem'
     },
     buttonRed: {
       backgroundColor: '#ef4444',
@@ -142,8 +162,12 @@ const AdminMain = () => {
       borderRadius: '0.5rem',
       fontWeight: '600',
       cursor: 'pointer',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-      transition: 'background-color 0.2s'
+      transition: 'background-color 0.2s',
+      fontSize: '0.875rem'
     },
     infoText: {
       color: '#1e293b',
@@ -256,13 +280,31 @@ const AdminMain = () => {
         {/* Botones principales */}
         <div style={styles.buttonContainer}>
           <Link href={`/${slug}`} target="_blank">
-            <button style={styles.button}>
+            <button
+              style={styles.button}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6'
+              }}
+            >
+              <Eye size={16} />
               Ver Tienda
             </button>
           </Link>
           
           <Link href={`/${slug}/admin/new`}>
-            <button style={styles.button}>
+            <button
+              style={styles.button}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6'
+              }}
+            >
+              <Plus size={16} />
               Nueva Card
             </button>
           </Link>
@@ -270,7 +312,14 @@ const AdminMain = () => {
           <button
             style={styles.buttonRed}
             onClick={() => signOut()}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444'
+            }}
           >
+            <LogOut size={16} />
             Salir
           </button>
         </div>
@@ -309,8 +358,33 @@ const AdminMain = () => {
                 </p>
                 
                 <div style={styles.buttonContainer}>
+                  {/* NUEVO: Botón Ver Detalle */}
+                  <Link href={`/${slug}/admin/detail/${card.id}`}>
+                    <button
+                      style={styles.buttonSecondary}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#475569'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#64748b'
+                      }}
+                    >
+                      <Eye size={16} />
+                      Ver Detalle
+                    </button>
+                  </Link>
+                  
                   <Link href={`/${slug}/admin/edit/${card.id}`}>
-                    <button style={styles.button}>
+                    <button
+                      style={styles.button}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2563eb'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#3b82f6'
+                      }}
+                    >
+                      <Edit size={16} />
                       Editar
                     </button>
                   </Link>
@@ -318,7 +392,14 @@ const AdminMain = () => {
                   <button
                     style={styles.buttonRed}
                     onClick={() => handleDeleteCard(card.id)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#dc2626'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#ef4444'
+                    }}
                   >
+                    <Trash2 size={16} />
                     Eliminar
                   </button>
                 </div>

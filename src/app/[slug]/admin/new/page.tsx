@@ -1,390 +1,512 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowLeft, Save, Upload, X, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { ArrowLeft, Upload, X } from 'lucide-react'
 
-export default function AdminNewCardPage() {
+const AdminNew = () => {
+  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
-  const { data: session } = useSession()
   const slug = params.slug as string
-  
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState<string | null>(null)
-  const [cardCount, setCardCount] = useState(0)
 
-  // Estados del formulario
-  const [cardForm, setCardForm] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     image1Url: '',
     image2Url: '',
     image3Url: ''
   })
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({})
+  const [saving, setSaving] = useState(false)
+
+  // Estilos CSS en línea consistentes
+  const styles = {
+    body: {
+      backgroundColor: '#1e293b',
+      minHeight: '100vh',
+      margin: 0,
+      padding: 0,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      backgroundColor: '#ffffff',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      borderBottom: '4px solid #60a5fa',
+      marginBottom: '2rem'
+    },
+    headerContent: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '1.5rem 1rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem'
+    },
+    backButton: {
+      backgroundColor: '#3b82f6',
+      color: '#ffffff',
+      border: 'none',
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      textDecoration: 'none',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'background-color 0.2s'
+    },
+    title: {
+      fontSize: '2rem',
+      fontWeight: 'bold',
+      color: '#1e293b',
+      margin: 0
+    },
+    main: {
+      maxWidth: '800px',
+      margin: '0 auto',
+      padding: '0 1rem 2rem 1rem'
+    },
+    form: {
+      backgroundColor: '#ffffff',
+      borderRadius: '0.75rem',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #60a5fa',
+      padding: '2rem'
+    },
+    formTitle: {
+      fontSize: '1.75rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      textAlign: 'center' as const,
+      marginBottom: '2rem'
+    },
+    section: {
+      marginBottom: '2rem'
+    },
+    sectionTitle: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      textAlign: 'center' as const,
+      marginBottom: '1rem'
+    },
+    label: {
+      display: 'block',
+      fontSize: '1rem',
+      fontWeight: '600',
+      color: '#1e293b',
+      marginBottom: '0.5rem'
+    },
+    input: {
+      width: '100%',
+      padding: '0.75rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      transition: 'border-color 0.2s',
+      boxSizing: 'border-box' as const
+    },
+    textarea: {
+      width: '100%',
+      padding: '0.75rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      minHeight: '120px',
+      resize: 'vertical' as const,
+      transition: 'border-color 0.2s',
+      boxSizing: 'border-box' as const,
+      fontFamily: 'inherit'
+    },
+    imageSection: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '1rem',
+      marginTop: '1rem'
+    },
+    imageUpload: {
+      border: '2px dashed #cbd5e1',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      textAlign: 'center' as const,
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+      minHeight: '200px',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    imagePreview: {
+      position: 'relative' as const,
+      border: '2px solid #60a5fa',
+      borderRadius: '0.5rem',
+      overflow: 'hidden',
+      height: '200px'
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover' as const
+    },
+    removeButton: {
+      position: 'absolute' as const,
+      top: '0.5rem',
+      right: '0.5rem',
+      backgroundColor: 'rgba(239, 68, 68, 0.9)',
+      color: '#ffffff',
+      border: 'none',
+      borderRadius: '50%',
+      width: '2rem',
+      height: '2rem',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '0.75rem'
+    },
+    uploadText: {
+      color: '#64748b',
+      fontSize: '0.875rem',
+      marginTop: '0.5rem'
+    },
+    hiddenInput: {
+      display: 'none'
+    },
+    buttonContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '1rem',
+      flexWrap: 'wrap' as const,
+      marginTop: '2rem'
+    },
+    button: {
+      backgroundColor: '#3b82f6',
+      color: '#ffffff',
+      border: 'none',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontSize: '1rem',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'background-color 0.2s',
+      minWidth: '120px'
+    },
+    buttonDisabled: {
+      backgroundColor: '#9ca3af',
+      cursor: 'not-allowed'
+    },
+    helpText: {
+      color: '#64748b',
+      fontSize: '0.875rem',
+      textAlign: 'center' as const,
+      marginTop: '1rem',
+      padding: '1rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '0.5rem',
+      border: '1px solid #e2e8f0'
+    },
+    footer: {
+      backgroundColor: '#1e293b',
+      borderTop: '4px solid #60a5fa',
+      marginTop: '2rem',
+      padding: '1rem',
+      textAlign: 'center' as const
+    },
+    footerText: {
+      color: '#ffffff',
+      fontSize: '0.875rem',
+      margin: 0
+    }
+  }
 
   useEffect(() => {
-    if (!session?.user) {
-      router.push(`/${slug}/admin`)
+    // Aplicar estilos al body
+    document.body.style.backgroundColor = styles.body.backgroundColor
+    document.body.style.minHeight = styles.body.minHeight
+    document.body.style.margin = styles.body.margin.toString()
+    document.body.style.padding = styles.body.padding.toString()
+    document.body.style.fontFamily = styles.body.fontFamily
+
+    return () => {
+      // Limpiar estilos al desmontar
+      document.body.style.backgroundColor = ''
+      document.body.style.minHeight = ''
+      document.body.style.margin = ''
+      document.body.style.padding = ''
+      document.body.style.fontFamily = ''
+    }
+  }, [])
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (!session) {
+      router.push(`/${slug}/auth/signin`)
       return
     }
-    
-    checkCardLimit()
-  }, [session])
+  }, [session, status, slug])
 
-  const checkCardLimit = async () => {
-    try {
-      const response = await fetch(`/api/cards?store=${slug}`)
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar datos')
-      }
-
-      const data = await response.json()
-      setCardCount(data.cards.length)
-      
-      if (data.cards.length >= 10) {
-        alert('Has alcanzado el límite de 10 cards. Elimina alguna para crear una nueva.')
-        router.push(`/${slug}/admin`)
-        return
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleImageUpload = async (file: File, imageType: string) => {
-    setUploadingImage(imageType)
-    
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', 'card')
+  const handleImageUpload = async (file: File, imageKey: string) => {
+    setUploading(prev => ({ ...prev, [imageKey]: true }))
 
+    const uploadFormData = new FormData()
+    uploadFormData.append('file', file)
+
+    try {
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: uploadFormData
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al subir imagen')
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({ ...prev, [imageKey]: data.url }))
+      } else {
+        alert('Error subiendo imagen')
       }
-
-      const data = await response.json()
-      setCardForm({ ...cardForm, [imageType]: data.url })
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Error al subir imagen')
+      console.error('Error uploading image:', error)
+      alert('Error subiendo imagen')
     } finally {
-      setUploadingImage(null)
+      setUploading(prev => ({ ...prev, [imageKey]: false }))
     }
   }
 
-  const removeImage = (imageType: string) => {
-    setCardForm({ ...cardForm, [imageType]: '' })
+  const handleImageRemove = (imageKey: string) => {
+    setFormData(prev => ({ ...prev, [imageKey]: '' }))
   }
 
-  const clearAllFields = () => {
-    if (confirm('¿Estás seguro de que quieres limpiar todos los campos?')) {
-      setCardForm({
-        title: '',
-        description: '',
-        image1Url: '',
-        image2Url: '',
-        image3Url: ''
-      })
-    }
-  }
-
-  const saveCard = async () => {
-    if (!cardForm.title.trim() || !cardForm.description.trim()) {
-      alert('Título y descripción son obligatorios')
-      return
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setSaving(true)
-    
+
     try {
       const response = await fetch('/api/cards', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...cardForm,
-          image1Url: cardForm.image1Url || null,
-          image2Url: cardForm.image2Url || null,
-          image3Url: cardForm.image3Url || null,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       })
 
-      if (!response.ok) {
+      if (response.ok) {
+        router.push(`/${slug}/admin`)
+      } else {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al crear card')
+        alert(errorData.error || 'Error creando card')
       }
-
-      alert('Card creada exitosamente')
-      router.push(`/${slug}/admin`)
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Error al crear card')
+      console.error('Error creating card:', error)
+      alert('Error creando card')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando disponibilidad...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const ImageUploadSection = ({ 
-    imageUrl, 
-    imageType, 
-    label 
-  }: { 
-    imageUrl: string
-    imageType: string
-    label: string 
-  }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      
-      {imageUrl ? (
-        <div className="relative group">
-          <Image
-            src={imageUrl}
-            alt={label}
-            width={120}
-            height={120}
-            className="rounded-lg object-cover border"
-          />
-          <button
-            type="button"
-            onClick={() => removeImage(imageType)}
-            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleImageUpload(file, imageType)
-            }}
-            className="hidden"
-            id={`upload-${imageType}`}
-            disabled={uploadingImage === imageType}
-          />
-          <label
-            htmlFor={`upload-${imageType}`}
-            className="cursor-pointer flex flex-col items-center space-y-2"
-          >
-            {uploadingImage === imageType ? (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            ) : (
-              <Upload className="text-gray-400" size={24} />
-            )}
-            <span className="text-sm text-gray-600">
-              {uploadingImage === imageType ? 'Subiendo...' : 'Subir imagen'}
-            </span>
-          </label>
-        </div>
-      )}
-    </div>
-  )
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div style={styles.body}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => router.push(`/${slug}/admin`)}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft size={20} />
-                <span>Volver al panel</span>
-              </Button>
-              
-              <h1 className="text-2xl font-bold text-gray-900">Nueva Card</h1>
-            </div>
-            
-            <div className="text-sm text-gray-600">
-              {cardCount + 1}/10 cards
-            </div>
-          </div>
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          <Link
+            href={`/${slug}/admin`}
+            style={styles.backButton}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6'
+            }}
+          >
+            <ArrowLeft size={16} />
+            Volver al Panel
+          </Link>
+          <h1 style={styles.title}>Nueva Card</h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Crear nueva card</CardTitle>
-            <p className="text-gray-600">
-              Agrega un nuevo producto a tu tienda. Las imágenes son opcionales.
-            </p>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {/* Título */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Título de la card *
-              </label>
-              <input
-                type="text"
-                required
-                value={cardForm.title}
-                onChange={(e) => setCardForm({ ...cardForm, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Ej: iPhone 15 Pro Max, Remera Nike Air, Torta de Chocolate..."
-              />
+      {/* Main Content */}
+      <main style={styles.main}>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <h2 style={styles.formTitle}>Crear Nueva Card</h2>
+
+          {/* Título */}
+          <div style={styles.section}>
+            <label htmlFor="title" style={styles.label}>
+              Título de la Card *
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+              placeholder="Ej: Vinos Premium, Artesanías, etc."
+              style={styles.input}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+              }}
+            />
+          </div>
+
+          {/* Descripción */}
+          <div style={styles.section}>
+            <label htmlFor="description" style={styles.label}>
+              Descripción *
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              required
+              placeholder="Describe tu producto o servicio. Incluye detalles importantes como precios, características, etc."
+              style={styles.textarea}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+              }}
+            />
+          </div>
+
+          {/* Imágenes */}
+          <div style={styles.section}>
+            <h3 style={styles.sectionTitle}>Imágenes del Producto</h3>
+            <div style={styles.imageSection}>
+              {[1, 2, 3].map((num) => {
+                const imageKey = `image${num}Url` as keyof typeof formData
+                const imageUrl = formData[imageKey]
+                const isUploading = uploading[imageKey]
+
+                return (
+                  <div key={num}>
+                    {imageUrl ? (
+                      <div style={styles.imagePreview}>
+                        <Image
+                          src={imageUrl}
+                          alt={`Imagen ${num}`}
+                          width={200}
+                          height={200}
+                          style={styles.image}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleImageRemove(imageKey)}
+                          style={styles.removeButton}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.9)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)'
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          ...styles.imageUpload,
+                          borderColor: isUploading ? '#3b82f6' : '#cbd5e1',
+                          backgroundColor: isUploading ? '#f0f9ff' : '#ffffff'
+                        }}
+                        onClick={() => {
+                          if (!isUploading) {
+                            document.getElementById(`file-${num}`)?.click()
+                          }
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isUploading) {
+                            e.currentTarget.style.borderColor = '#3b82f6'
+                            e.currentTarget.style.backgroundColor = '#f8fafc'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isUploading) {
+                            e.currentTarget.style.borderColor = '#cbd5e1'
+                            e.currentTarget.style.backgroundColor = '#ffffff'
+                          }
+                        }}
+                      >
+                        <Upload size={24} color={isUploading ? '#3b82f6' : '#64748b'} />
+                        <p style={styles.uploadText}>
+                          {isUploading ? 'Subiendo...' : `Subir Imagen ${num}`}
+                        </p>
+                        <input
+                          id={`file-${num}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              handleImageUpload(file, imageKey)
+                            }
+                          }}
+                          style={styles.hiddenInput}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-
-            {/* Imágenes */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Imágenes del producto</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <ImageUploadSection 
-                  imageUrl={cardForm.image1Url} 
-                  imageType="image1Url" 
-                  label="Foto 1" 
-                />
-                <ImageUploadSection 
-                  imageUrl={cardForm.image2Url} 
-                  imageType="image2Url" 
-                  label="Foto 2" 
-                />
-                <ImageUploadSection 
-                  imageUrl={cardForm.image3Url} 
-                  imageType="image3Url" 
-                  label="Foto 3" 
-                />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                • Las imágenes son opcionales, pero recomendadas para mejor visualización
-                • Formatos soportados: JPG, PNG, WebP
-                • Tamaño máximo: 5MB por imagen
-              </p>
+            
+            <div style={styles.helpText}>
+              💡 <strong>Tip:</strong> Puedes subir hasta 3 imágenes. Las imágenes ayudan a que tus clientes vean mejor tus productos. Formatos: JPG, PNG, WEBP.
             </div>
+          </div>
 
-            {/* Descripción */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción detallada *
-              </label>
-              <textarea
-                required
-                value={cardForm.description}
-                onChange={(e) => setCardForm({ ...cardForm, description: e.target.value })}
-                rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder={`Describe tu producto con todos los detalles importantes:
-
-• Características principales
-• Precio
-• Colores disponibles
-• Tallas o medidas
-• Estado (nuevo/usado)
-• Información de envío
-• Cualquier detalle relevante...`}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Las primeras dos líneas se mostrarán como preview en la vista principal
-              </p>
-            </div>
-
-            {/* Preview */}
-            {(cardForm.title || cardForm.description) && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Vista previa</h4>
-                <div className="bg-white p-4 rounded border">
-                  {cardForm.title && (
-                    <h5 className="font-semibold text-lg mb-2">{cardForm.title}</h5>
-                  )}
-                  {cardForm.description && (
-                    <p className="text-gray-600 text-sm">
-                      {cardForm.description.split('\n').slice(0, 2).join('\n')}
-                      {cardForm.description.split('\n').length > 2 && '...'}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Botones */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
-              <Button
-                variant="outline"
-                onClick={clearAllFields}
-                className="flex items-center justify-center space-x-2 text-red-600 border-red-300 hover:bg-red-50"
-              >
-                <Trash2 size={16} />
-                <span>Limpiar todo</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/${slug}/admin`)}
-              >
-                Cancelar
-              </Button>
-              
-              <Button
-                onClick={saveCard}
-                disabled={saving || !cardForm.title.trim() || !cardForm.description.trim()}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 flex items-center justify-center space-x-2"
-              >
-                <Save size={16} />
-                <span>{saving ? 'Creando...' : 'Agregar Card'}</span>
-              </Button>
-            </div>
-
-            {/* Información adicional */}
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">💡 Consejos para tu card:</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Usa un título claro y descriptivo</li>
-                <li>• Las primeras dos líneas de la descripción son las más importantes</li>
-                <li>• Incluye precios, colores, tallas y detalles de envío</li>
-                <li>• Las imágenes ayudan mucho a vender, pero no son obligatorias</li>
-                <li>• Puedes editar esta card más tarde desde el panel principal</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Botones */}
+          <div style={styles.buttonContainer}>
+            <button
+              type="submit"
+              disabled={saving || !formData.title || !formData.description}
+              style={{
+                ...styles.button,
+                ...((saving || !formData.title || !formData.description) ? styles.buttonDisabled : {})
+              }}
+              onMouseEnter={(e) => {
+                if (!saving && formData.title && formData.description) {
+                  e.currentTarget.style.backgroundColor = '#2563eb'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!saving && formData.title && formData.description) {
+                  e.currentTarget.style.backgroundColor = '#3b82f6'
+                }
+              }}
+            >
+              {saving ? 'Creando...' : '🎯 Crear Card'}
+            </button>
+          </div>
+        </form>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Desarrollado por @vstecnic by Juan G. Soto
-            </p>
-          </div>
-        </div>
+      <footer style={styles.footer}>
+        <p style={styles.footerText}>
+          Desarrollado por @vstecnic by Juan G. Soto
+        </p>
       </footer>
     </div>
   )
 }
+
+export default AdminNew

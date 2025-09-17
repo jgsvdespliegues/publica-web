@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
-import { Instagram, MessageCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface StoreData {
+interface Store {
   id: string
   slug: string
   name: string
@@ -18,212 +14,398 @@ interface StoreData {
   whatsappUrl?: string
 }
 
-interface CardData {
+interface Card {
   id: string
   title: string
   description: string
   image1Url?: string
   image2Url?: string
   image3Url?: string
+  orderPosition: number
 }
 
-export default function ClientMainPage() {
+const ClientMain = () => {
   const params = useParams()
   const slug = params.slug as string
-  
-  const [store, setStore] = useState<StoreData | null>(null)
-  const [cards, setCards] = useState<CardData[]>([])
+
+  const [store, setStore] = useState<Store | null>(null)
+  const [cards, setCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+  // Estilos CSS en línea consistentes con admin
+  const styles = {
+    body: {
+      backgroundColor: '#1e293b',
+      minHeight: '100vh',
+      margin: 0,
+      padding: 0,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      backgroundColor: '#ffffff',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      borderBottom: '4px solid #60a5fa',
+      marginBottom: '2rem'
+    },
+    headerContent: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '2rem 1rem',
+      textAlign: 'center' as const
+    },
+    storeName: {
+      fontSize: '2.5rem',
+      fontWeight: 'bold',
+      color: '#1e293b',
+      margin: '0 0 0.5rem 0'
+    },
+    storeContact: {
+      fontSize: '1.1rem',
+      color: '#64748b',
+      margin: 0
+    },
+    main: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '0 1rem 2rem 1rem'
+    },
+    cardsContainer: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+      gap: '2rem',
+      marginBottom: '2rem'
+    },
+    card: {
+      backgroundColor: '#ffffff',
+      borderRadius: '0.75rem',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #60a5fa',
+      padding: '1.5rem',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer'
+    },
+    cardTitle: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      textAlign: 'center' as const,
+      marginBottom: '1rem'
+    },
+    imageContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '0.5rem',
+      marginBottom: '1rem',
+      flexWrap: 'wrap' as const
+    },
+    image: {
+      width: '100px',
+      height: '100px',
+      borderRadius: '0.5rem',
+      border: '2px solid #60a5fa',
+      objectFit: 'cover' as const
+    },
+    noImage: {
+      width: '100px',
+      height: '100px',
+      backgroundColor: '#f3f4f6',
+      border: '2px solid #60a5fa',
+      borderRadius: '0.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#6b7280',
+      fontSize: '0.75rem'
+    },
+    description: {
+      color: '#1e293b',
+      textAlign: 'center' as const,
+      lineHeight: '1.6',
+      fontSize: '1rem'
+    },
+    emptyState: {
+      backgroundColor: '#ffffff',
+      borderRadius: '0.75rem',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #60a5fa',
+      padding: '3rem 1.5rem',
+      textAlign: 'center' as const
+    },
+    emptyTitle: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#3b82f6',
+      marginBottom: '1rem'
+    },
+    emptyText: {
+      color: '#64748b',
+      fontSize: '1.1rem'
+    },
+    footer: {
+      backgroundColor: '#1e293b',
+      borderTop: '4px solid #60a5fa',
+      marginTop: '3rem',
+      padding: '2rem 1rem'
+    },
+    footerContent: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      textAlign: 'center' as const
+    },
+    footerTitle: {
+      color: '#60a5fa',
+      fontSize: '1.2rem',
+      fontWeight: 'bold',
+      marginBottom: '1rem'
+    },
+    footerText: {
+      color: '#cbd5e1',
+      fontSize: '0.9rem',
+      marginBottom: '0.5rem'
+    },
+    socialLinks: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '1rem',
+      marginTop: '1rem',
+      flexWrap: 'wrap' as const
+    },
+    socialLink: {
+      color: '#60a5fa',
+      textDecoration: 'none',
+      fontSize: '0.9rem',
+      padding: '0.5rem 1rem',
+      border: '1px solid #60a5fa',
+      borderRadius: '0.5rem',
+      transition: 'all 0.2s'
+    },
+    credits: {
+      color: '#64748b',
+      fontSize: '0.75rem',
+      marginTop: '2rem',
+      paddingTop: '1rem',
+      borderTop: '1px solid #374151'
+    }
+  }
 
   useEffect(() => {
-    const fetchStoreData = async () => {
-      try {
-        const response = await fetch(`/api/cards?store=${slug}`)
-        
-        if (!response.ok) {
-          throw new Error('Tienda no encontrada')
-        }
+    // Aplicar estilos al body
+    document.body.style.backgroundColor = styles.body.backgroundColor
+    document.body.style.minHeight = styles.body.minHeight
+    document.body.style.margin = styles.body.margin.toString()
+    document.body.style.padding = styles.body.padding.toString()
+    document.body.style.fontFamily = styles.body.fontFamily
 
-        const data = await response.json()
-        setStore(data.store)
-        setCards(data.cards)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido')
-      } finally {
-        setLoading(false)
-      }
+    return () => {
+      // Limpiar estilos al desmontar
+      document.body.style.backgroundColor = ''
+      document.body.style.minHeight = ''
+      document.body.style.margin = ''
+      document.body.style.padding = ''
+      document.body.style.fontFamily = ''
     }
+  }, [])
 
+  useEffect(() => {
     fetchStoreData()
   }, [slug])
 
+  const fetchStoreData = async () => {
+    try {
+      const response = await fetch(`/api/cards?store=${slug}`)
+      if (response.ok) {
+        const data = await response.json()
+        setStore(data.store)
+        setCards(data.cards)
+      }
+    } catch (error) {
+      console.error('Error fetching store data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCardClick = (card: Card) => {
+    // Scroll suave hacia arriba
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando tienda...</p>
+      <div style={styles.body}>
+        <div style={styles.main}>
+          <div style={styles.emptyState}>
+            <h2 style={styles.emptyTitle}>Cargando...</h2>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (error || !store) {
+  if (!store) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Tienda no encontrada</h1>
-          <p className="text-gray-600 mb-4">
-            La tienda que buscas no existe o no está disponible.
-          </p>
-          <Button onClick={() => window.location.reload()}>
-            Intentar nuevamente
-          </Button>
+      <div style={styles.body}>
+        <div style={styles.main}>
+          <div style={styles.emptyState}>
+            <h2 style={styles.emptyTitle}>Tienda no encontrada</h2>
+            <p style={styles.emptyText}>
+              La tienda que buscas no existe o no está disponible.
+            </p>
+          </div>
         </div>
       </div>
     )
-  }
-
-  const truncateText = (text: string, maxLength: number = 100) => {
-    if (text.length <= maxLength) return text
-    return text.substring(0, maxLength) + '...'
-  }
-
-  const getFirstTwoLines = (text: string) => {
-    const lines = text.split('\n')
-    return lines.slice(0, 2).join('\n')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div style={styles.body}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="text-center">
-            {store.logoUrl ? (
-              <div className="mb-4">
-                <Image
-                  src={store.logoUrl}
-                  alt={`Logo de ${store.name}`}
-                  width={120}
-                  height={120}
-                  className="mx-auto rounded-lg shadow-md"
-                />
-              </div>
-            ) : (
-              <div className="mb-4">
-                <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
-              </div>
-            )}
-            {store.logoUrl && (
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">{store.name}</h1>
-            )}
-          </div>
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          {store.logoUrl && (
+            <div style={{ marginBottom: '1rem' }}>
+              <Image
+                src={store.logoUrl}
+                alt={store.name}
+                width={80}
+                height={80}
+                style={{ borderRadius: '50%', border: '3px solid #60a5fa' }}
+              />
+            </div>
+          )}
+          <h1 style={styles.storeName}>{store.name}</h1>
+          {store.contactInfo && (
+            <p style={styles.storeContact}>{store.contactInfo}</p>
+          )}
         </div>
       </header>
 
-      {/* Cards Section */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      {/* Main Content */}
+      <main style={styles.main}>
         {cards.length === 0 ? (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-600 mb-2">
-              Próximamente contenido nuevo
-            </h2>
-            <p className="text-gray-500">
-              Esta tienda está preparando productos increíbles para ti.
+          <div style={styles.emptyState}>
+            <h2 style={styles.emptyTitle}>¡Próximamente!</h2>
+            <p style={styles.emptyText}>
+              Esta tienda está preparando productos increíbles para ti. 
+              Vuelve pronto para ver las novedades.
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+          <div style={styles.cardsContainer}>
             {cards.map((card) => (
-              <Card key={card.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-xl text-gray-900">{card.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Imagen preview */}
-                    {card.image1Url && (
-                      <div className="lg:w-1/3">
-                        <Image
-                          src={card.image1Url}
-                          alt={card.title}
-                          width={300}
-                          height={200}
-                          className="w-full h-48 lg:h-32 object-cover rounded-lg"
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Contenido */}
-                    <div className="flex-1">
-                      <p className="text-gray-600 mb-4 leading-relaxed">
-                        {truncateText(getFirstTwoLines(card.description))}
-                      </p>
-                      
-                      <Link href={`/${slug}/detail/${card.id}`}>
-                        <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                          Ver más
-                        </Button>
-                      </Link>
+              <div
+                key={card.id}
+                style={styles.card}
+                onClick={() => handleCardClick(card)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)'
+                  e.currentTarget.style.borderColor = '#3b82f6'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.borderColor = '#60a5fa'
+                }}
+              >
+                <h2 style={styles.cardTitle}>{card.title}</h2>
+                
+                <div style={styles.imageContainer}>
+                  {card.image1Url && (
+                    <Image
+                      src={card.image1Url}
+                      alt={card.title}
+                      width={100}
+                      height={100}
+                      style={styles.image}
+                    />
+                  )}
+                  {card.image2Url && (
+                    <Image
+                      src={card.image2Url}
+                      alt={card.title}
+                      width={100}
+                      height={100}
+                      style={styles.image}
+                    />
+                  )}
+                  {card.image3Url && (
+                    <Image
+                      src={card.image3Url}
+                      alt={card.title}
+                      width={100}
+                      height={100}
+                      style={styles.image}
+                    />
+                  )}
+                  {!card.image1Url && !card.image2Url && !card.image3Url && (
+                    <div style={styles.noImage}>
+                      Sin imagen
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                </div>
+                
+                <p style={styles.description}>{card.description}</p>
+              </div>
             ))}
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t-4 border-blue-500 mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Información de contacto */}
+      <footer style={styles.footer}>
+        <div style={styles.footerContent}>
+          <h3 style={styles.footerTitle}>Contacto</h3>
+          
           {store.contactInfo && (
-            <div className="text-center mb-6">
-              <h3 className="font-semibold text-slate-800 mb-2">Contacto</h3>
-              <p className="text-slate-600">{store.contactInfo}</p>
-            </div>
+            <p style={styles.footerText}>📞 {store.contactInfo}</p>
           )}
-
-          {/* Redes sociales */}
-          {(store.instagramUrl || store.whatsappUrl) && (
-            <div className="flex justify-center space-x-4 mb-6">
-              {store.instagramUrl && (
-                <a
-                  href={store.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow font-semibold"
-                >
-                  <Instagram size={20} />
-                  <span>Instagram</span>
-                </a>
-              )}
-              
-              {store.whatsappUrl && (
-                <a
-                  href={store.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow font-semibold"
-                >
-                  <MessageCircle size={20} />
-                  <span>WhatsApp</span>
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Créditos */}
-          <div className="text-center pt-6 border-t border-blue-200 bg-slate-700 rounded-lg px-4 py-3">
-            <p className="text-sm text-white font-medium">
-              Desarrollado por @vstecnic by Juan G. Soto
-            </p>
+          
+          <div style={styles.socialLinks}>
+            {store.whatsappUrl && (
+              <a
+                href={store.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.socialLink}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#60a5fa'
+                  e.currentTarget.style.color = '#ffffff'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#60a5fa'
+                }}
+              >
+                💬 WhatsApp
+              </a>
+            )}
+            
+            {store.instagramUrl && (
+              <a
+                href={store.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.socialLink}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#60a5fa'
+                  e.currentTarget.style.color = '#ffffff'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#60a5fa'
+                }}
+              >
+                📸 Instagram
+              </a>
+            )}
           </div>
+          
+          <p style={styles.credits}>
+            Desarrollado por @vstecnic by Juan G. Soto
+          </p>
         </div>
       </footer>
     </div>
   )
 }
+
+export default ClientMain
