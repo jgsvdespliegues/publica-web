@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -188,6 +188,22 @@ const AdminMain = () => {
     }
   }
 
+  // Memoizar fetchStoreData para evitar warnings de dependencias
+  const fetchStoreData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/cards?store=${slug}`)
+      if (response.ok) {
+        const data = await response.json()
+        setStore(data.store)
+        setCards(data.cards)
+      }
+    } catch (error) {
+      console.error('Error fetching store data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [slug])
+
   useEffect(() => {
     // Aplicar estilos al body
     document.body.style.backgroundColor = styles.body.backgroundColor
@@ -204,7 +220,7 @@ const AdminMain = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, [])
+  }, []) // Sin dependencias - solo aplicar estilos una vez
 
   useEffect(() => {
     if (status === 'loading') return
@@ -215,22 +231,7 @@ const AdminMain = () => {
     }
 
     fetchStoreData()
-  }, [session, status, slug])
-
-  const fetchStoreData = async () => {
-    try {
-      const response = await fetch(`/api/cards?store=${slug}`)
-      if (response.ok) {
-        const data = await response.json()
-        setStore(data.store)
-        setCards(data.cards)
-      }
-    } catch (error) {
-      console.error('Error fetching store data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [session, status, slug, router, fetchStoreData]) // Incluir todas las dependencias
 
   const handleDeleteCard = async (cardId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta card?')) return
@@ -358,7 +359,7 @@ const AdminMain = () => {
                 </p>
                 
                 <div style={styles.buttonContainer}>
-                  {/* NUEVO: Botón Ver Detalle */}
+                  {/* Botón Ver Detalle */}
                   <Link href={`/${slug}/admin/detail/${card.id}`}>
                     <button
                       style={styles.buttonSecondary}

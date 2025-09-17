@@ -220,7 +220,7 @@ const ClientMain = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, []) // Sin dependencias ya que solo queremos aplicar estilos una vez
+  }, []) // Sin dependencias - solo aplicar estilos una vez
 
   useEffect(() => {
     fetchStoreData()
