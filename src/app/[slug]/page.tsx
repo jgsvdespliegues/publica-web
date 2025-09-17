@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 
@@ -188,6 +188,22 @@ const ClientMain = () => {
     }
   }
 
+  // Memoizar la función fetchStoreData para evitar warning de dependencias
+  const fetchStoreData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/cards?store=${slug}`)
+      if (response.ok) {
+        const data = await response.json()
+        setStore(data.store)
+        setCards(data.cards)
+      }
+    } catch (error) {
+      console.error('Error fetching store data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [slug])
+
   useEffect(() => {
     // Aplicar estilos al body
     document.body.style.backgroundColor = styles.body.backgroundColor
@@ -204,28 +220,14 @@ const ClientMain = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, [])
+  }, []) // Sin dependencias ya que solo queremos aplicar estilos una vez
 
   useEffect(() => {
     fetchStoreData()
-  }, [slug])
+  }, [fetchStoreData]) // Ahora incluye fetchStoreData como dependencia
 
-  const fetchStoreData = async () => {
-    try {
-      const response = await fetch(`/api/cards?store=${slug}`)
-      if (response.ok) {
-        const data = await response.json()
-        setStore(data.store)
-        setCards(data.cards)
-      }
-    } catch (error) {
-      console.error('Error fetching store data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCardClick = (card: Card) => {
+  // Función para manejar click en card (sin usar el parámetro card)
+  const handleCardClick = () => {
     // Scroll suave hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -296,7 +298,7 @@ const ClientMain = () => {
               <div
                 key={card.id}
                 style={styles.card}
-                onClick={() => handleCardClick(card)}
+                onClick={handleCardClick} // Removido el parámetro card
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-5px)'
                   e.currentTarget.style.borderColor = '#3b82f6'

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, generateUniqueSlug, generateVerificationToken, isValidEmail, isValidPassword } from '@/lib/utils'
-import { sendVerificationEmail } from '@/lib/email'
-import { Prisma } from '@prisma/client'
+import { hashPassword, generateUniqueSlug, generateVerificationToken } from '@/lib/utils'
+// import { sendVerificationEmail } from '@/lib/resend' // Comentado temporalmente
 
 export async function POST(request: NextRequest) {
   try {
     const { storeName, email, password } = await request.json()
 
-    // Validaciones
+    // Validaciones básicas
     if (!storeName || !email || !password) {
       return NextResponse.json(
         { error: 'Todos los campos son obligatorios' },
@@ -16,14 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Email inválido' },
-        { status: 400 }
-      )
-    }
-
-    if (!isValidPassword(password)) {
+    if (password.length < 6) {
       return NextResponse.json(
         { error: 'La contraseña debe tener al menos 6 caracteres' },
         { status: 400 }
@@ -42,7 +34,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generar slug único
+    // Generar slug único para la tienda
     const slug = await generateUniqueSlug(storeName)
 
     // Hash de la contraseña
@@ -51,45 +43,53 @@ export async function POST(request: NextRequest) {
     // Generar token de verificación
     const verificationToken = generateVerificationToken()
 
-    // Crear la tienda y autenticación en una transacción
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // Crear tienda y autenticación en una transacción
+    const result = await prisma.$transaction(async (tx: typeof prisma) => {
       // Crear la tienda
       const store = await tx.store.create({
         data: {
-          slug,
           name: storeName,
+          slug
         }
       })
 
-      // Crear la autenticación
+      // Crear la autenticación (verificada automáticamente en desarrollo)
       const storeAuth = await tx.storeAuth.create({
-  data: {
-    storeId: store.id,
-    email,
-    passwordHash,
-    verificationToken,
-    isVerified: true  // ← SIMPLEMENTE CAMBIA false por true
-  }
-})
+        data: {
+          storeId: store.id,
+          email,
+          passwordHash,
+          verificationToken,
+          isVerified: process.env.NODE_ENV === 'development' ? true : false
+        }
+      })
 
       return { store, storeAuth }
     })
 
-    // Enviar email de verificación (deshabilitado en desarrollo)
+    // Comentado temporalmente - envío de email de verificación
     // const emailSent = await sendVerificationEmail(email, verificationToken, slug)
-    const emailSent = true // Simular que se envió
-    if (!emailSent) {
-      console.warn('Error enviando email de verificación, pero la cuenta se creó')
+    
+    // Simular que el email se envió exitosamente en desarrollo
+    const emailSent = process.env.NODE_ENV === 'development' ? true : false
+
+    if (!emailSent && process.env.NODE_ENV !== 'development') {
+      console.error('Error enviando email de verificación')
+      // No bloquear el registro si falla el email
     }
 
     return NextResponse.json({
-      message: 'Cuenta creada exitosamente. Revisa tu email para verificar tu cuenta.',
-      storeSlug: slug,
-      emailSent
+      message: 'Tienda creada exitosamente',
+      store: {
+        id: result.store.id,
+        name: result.store.name,
+        slug: result.store.slug
+      },
+      verificationRequired: process.env.NODE_ENV !== 'development'
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Error en registro:', error)
+    console.error('Error creando tienda:', error)
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
