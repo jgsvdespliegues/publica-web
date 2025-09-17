@@ -227,6 +227,7 @@ const AdminNew = () => {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Aplicar estilos al body
     document.body.style.backgroundColor = styles.body.backgroundColor
