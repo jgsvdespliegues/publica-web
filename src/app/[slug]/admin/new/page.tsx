@@ -7,13 +7,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Upload, X } from 'lucide-react'
 
-/* ---- styles movido fuera del componente ---- */
 const styles = {
   body: {
     backgroundColor: '#1e293b',
     minHeight: '100vh',
-    margin: '0',          // <- cambiado a string
-    padding: '0',         // <- cambiado a string
+    margin: '0',
+    padding: '0',
     fontFamily: 'system-ui, -apple-system, sans-serif'
   },
   header: {
@@ -210,8 +209,6 @@ const styles = {
     margin: 0
   }
 }
-
-/* ---------------- Componente ---------------- */
 
 export default function NewProductPage() {
   const { data: session } = useSession()
