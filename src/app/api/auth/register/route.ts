@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, generateUniqueSlug, generateVerificationToken } from '@/lib/utils'
+import { PrismaClient } from '@prisma/client'
 // import { sendVerificationEmail } from '@/lib/resend' // Comentado temporalmente
 
 export async function POST(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     const verificationToken = generateVerificationToken()
 
     // Crear tienda y autenticación en una transacción
-    const result = await prisma.$transaction(async (tx: typeof prisma) => {
+    const result = await prisma.$transaction(async (tx: PrismaClient) => {
       // Crear la tienda
       const store = await tx.store.create({
         data: {
