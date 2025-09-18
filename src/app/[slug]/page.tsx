@@ -4,13 +4,26 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 
-/* ---- styles movido fuera ---- */
+type Product = {
+  id: string
+  name: string
+  description: string
+  images?: string[]
+}
+
+type Store = {
+  name: string
+  contact?: string
+  products?: Product[]
+  links?: { name: string; url: string }[]
+}
+
 const styles = {
   body: {
     backgroundColor: '#1e293b',
     minHeight: '100vh',
-    margin: '0',       // <- cambiado a string
-    padding: '0',      // <- cambiado a string
+    margin: '0',
+    padding: '0',
     fontFamily: 'system-ui, -apple-system, sans-serif'
   },
   header: {
@@ -160,11 +173,9 @@ const styles = {
   }
 }
 
-/* ---------------- Componente ---------------- */
-
 export default function StorePage() {
   const params = useParams()
-  const [store, setStore] = useState<any>(null)
+  const [store, setStore] = useState<Store | null>(null)
 
   useEffect(() => {
     document.body.style.backgroundColor = styles.body.backgroundColor
@@ -183,7 +194,7 @@ export default function StorePage() {
   const fetchStore = useCallback(async () => {
     const res = await fetch(`/api/${params.slug}/store`)
     if (res.ok) {
-      const data = await res.json()
+      const data: Store = await res.json()
       setStore(data)
     }
   }, [params.slug])
@@ -204,14 +215,14 @@ export default function StorePage() {
       </header>
 
       <main style={styles.main}>
-        {store?.products?.length > 0 ? (
+        {store?.products?.length ? (
           <div style={styles.cardsContainer}>
-            {store.products.map((p: any) => (
+            {store.products.map((p) => (
               <div key={p.id} style={styles.card}>
                 <h2 style={styles.cardTitle}>{p.name}</h2>
                 <div style={styles.imageContainer}>
                   {p.images?.length ? (
-                    p.images.map((img: string, i: number) => (
+                    p.images.map((img, i) => (
                       <Image
                         key={i}
                         src={img}
@@ -244,7 +255,7 @@ export default function StorePage() {
           <h3 style={styles.footerTitle}>Contacto</h3>
           <p style={styles.footerText}>{store?.contact || '---'}</p>
           <div style={styles.socialLinks}>
-            {store?.links?.map((link: any, i: number) => (
+            {store?.links?.map((link, i) => (
               <a
                 key={i}
                 href={link.url}

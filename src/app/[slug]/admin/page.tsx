@@ -2,18 +2,24 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, LogOut, Edit, Trash2, Plus } from 'lucide-react'
 
-/* ---- styles movido fuera ---- */
+type Product = {
+  id: string
+  name: string
+  description: string
+  images?: string[]
+}
+
 const styles = {
   body: {
     backgroundColor: '#1e293b',
     minHeight: '100vh',
-    margin: '0',       // <- cambiado a string
-    padding: '0',      // <- cambiado a string
+    margin: '0',
+    padding: '0',
     fontFamily: 'system-ui, -apple-system, sans-serif'
   },
   header: {
@@ -158,13 +164,10 @@ const styles = {
   }
 }
 
-/* ---------------- Componente ---------------- */
-
 export default function AdminPage() {
   const { data: session } = useSession()
   const params = useParams()
-  const router = useRouter()
-  const [products, setProducts] = useState<any[]>([])
+  const [products, setProducts] = useState<Product[]>([])
 
   useEffect(() => {
     document.body.style.backgroundColor = styles.body.backgroundColor
@@ -183,7 +186,7 @@ export default function AdminPage() {
   const fetchProducts = useCallback(async () => {
     const res = await fetch(`/api/${params.slug}/products`)
     if (res.ok) {
-      const data = await res.json()
+      const data: Product[] = await res.json()
       setProducts(data)
     }
   }, [params.slug])
@@ -215,10 +218,7 @@ export default function AdminPage() {
             <Link href={`/${params.slug}/admin/new`} style={styles.button}>
               <Plus size={16} /> Nuevo
             </Link>
-            <button
-              onClick={() => signOut()}
-              style={styles.buttonSecondary}
-            >
+            <button onClick={() => signOut()} style={styles.buttonSecondary}>
               <LogOut size={16} /> Salir
             </button>
           </div>
@@ -226,7 +226,7 @@ export default function AdminPage() {
           {products.length === 0 ? (
             <p style={styles.infoText}>No hay productos</p>
           ) : (
-            products.map((p: any) => (
+            products.map((p) => (
               <div key={p.id} style={styles.productCard}>
                 <h3 style={styles.productTitle}>{p.name}</h3>
                 <div style={styles.productImage}>
