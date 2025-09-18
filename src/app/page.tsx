@@ -204,7 +204,7 @@ export default function LandingPage() {
 
               <div className="mt-6 pt-6 border-t text-center">
                 <p className="text-xs text-gray-500">
-                  Al registrarte aceptas nuestros términos de servicio.
+                  Al registrarte aceptas nuestros términos y condiciones de servicio.
                   <br />
                   Desarrollado por @vstecnic by Juan G. Soto
                 </p>
