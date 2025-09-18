@@ -221,11 +221,11 @@ const ClientMain = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, []) // Sin dependencias - solo aplicar estilos una vez
+  }, [])
 
   useEffect(() => {
     fetchStoreData()
-  }, [fetchStoreData]) // Ahora incluye fetchStoreData como dependencia
+  }, [fetchStoreData])
 
   // Función para manejar click en card (sin usar el parámetro card)
   const handleCardClick = () => {
@@ -299,7 +299,7 @@ const ClientMain = () => {
               <div
                 key={card.id}
                 style={styles.card}
-                onClick={handleCardClick} // Removido el parámetro card
+                onClick={handleCardClick}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-5px)'
                   e.currentTarget.style.borderColor = '#3b82f6'

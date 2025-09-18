@@ -227,9 +227,14 @@ const AdminNew = () => {
     }
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Aplicar estilos al body
+    const originalBackgroundColor = document.body.style.backgroundColor
+    const originalMinHeight = document.body.style.minHeight
+    const originalMargin = document.body.style.margin
+    const originalPadding = document.body.style.padding
+    const originalFontFamily = document.body.style.fontFamily
+
     document.body.style.backgroundColor = styles.body.backgroundColor
     document.body.style.minHeight = styles.body.minHeight
     document.body.style.margin = styles.body.margin.toString()
@@ -237,14 +242,14 @@ const AdminNew = () => {
     document.body.style.fontFamily = styles.body.fontFamily
 
     return () => {
-      // Limpiar estilos al desmontar
-      document.body.style.backgroundColor = ''
-      document.body.style.minHeight = ''
-      document.body.style.margin = ''
-      document.body.style.padding = ''
-      document.body.style.fontFamily = ''
+      // Restaurar estilos al desmontar
+      document.body.style.backgroundColor = originalBackgroundColor
+      document.body.style.minHeight = originalMinHeight
+      document.body.style.margin = originalMargin
+      document.body.style.padding = originalPadding
+      document.body.style.fontFamily = originalFontFamily
     }
-  }, []) // Sin dependencias - solo aplicar estilos una vez
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -253,7 +258,7 @@ const AdminNew = () => {
       router.push(`/${slug}/auth/signin`)
       return
     }
-  }, [session, status, router, slug]) // Incluir todas las dependencias
+  }, [session, status, router, slug])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target

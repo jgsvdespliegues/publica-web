@@ -203,6 +203,7 @@ const AdminMain = () => {
       setLoading(false)
     }
   }, [slug])
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Aplicar estilos al body
@@ -220,7 +221,7 @@ const AdminMain = () => {
       document.body.style.padding = ''
       document.body.style.fontFamily = ''
     }
-  }, []) // Sin dependencias - solo aplicar estilos una vez
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -231,7 +232,7 @@ const AdminMain = () => {
     }
 
     fetchStoreData()
-  }, [session, status, slug, router, fetchStoreData]) // Incluir todas las dependencias
+  }, [session, status, slug, router, fetchStoreData])
 
   const handleDeleteCard = async (cardId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta card?')) return
