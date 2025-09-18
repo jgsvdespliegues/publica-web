@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -18,7 +17,6 @@ interface Card {
 }
 
 const AdminEdit = () => {
-  const { data: session, status } = useSession()
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
@@ -256,7 +254,7 @@ const AdminEdit = () => {
   }, [slug, cardId])
 
   useEffect(() => {
-    // Aplicar estilos al body
+    // Aplicar estilos al body guardando los valores originales
     const originalBackgroundColor = document.body.style.backgroundColor
     const originalMinHeight = document.body.style.minHeight
     const originalMargin = document.body.style.margin
@@ -270,7 +268,7 @@ const AdminEdit = () => {
     document.body.style.fontFamily = styles.body.fontFamily
 
     return () => {
-      // Restaurar estilos al desmontar
+      // Restaurar estilos originales al desmontar
       document.body.style.backgroundColor = originalBackgroundColor
       document.body.style.minHeight = originalMinHeight
       document.body.style.margin = originalMargin
@@ -280,15 +278,8 @@ const AdminEdit = () => {
   }, [])
 
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push(`/${slug}/auth/signin`)
-      return
-    }
-
     fetchCard()
-  }, [session, status, router, slug, fetchCard])
+  }, [fetchCard])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -407,12 +398,12 @@ const AdminEdit = () => {
       {/* Main Content */}
       <main style={styles.main}>
         <form onSubmit={handleSubmit} style={styles.form}>
-          <h2 style={styles.formTitle}>Editar "{card.title}"</h2>
+          <h2 style={styles.formTitle}>Editar &quot;{card.title}&quot;</h2>
 
           {/* Título */}
           <div style={styles.section}>
             <label htmlFor="title" style={styles.label}>
-              Título de la Card *
+              T&iacute;tulo de la Card *
             </label>
             <input
               type="text"
@@ -434,7 +425,7 @@ const AdminEdit = () => {
           {/* Descripción */}
           <div style={styles.section}>
             <label htmlFor="description" style={styles.label}>
-              Descripción *
+              Descripci&oacute;n *
             </label>
             <textarea
               id="description"
@@ -454,7 +445,7 @@ const AdminEdit = () => {
 
           {/* Imágenes */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>Imágenes del Producto</h3>
+            <h3 style={styles.sectionTitle}>Im&aacute;genes del Producto</h3>
             <div style={styles.imageSection}>
               {[1, 2, 3].map((num) => {
                 const imageKey = `image${num}Url` as keyof typeof formData
