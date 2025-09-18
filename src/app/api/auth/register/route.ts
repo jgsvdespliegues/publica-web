@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, generateUniqueSlug, generateVerificationToken } from '@/lib/utils'
-import { PrismaClient } from '@prisma/client'
 // import { sendVerificationEmail } from '@/lib/resend' // Comentado temporalmente
 
 export async function POST(request: NextRequest) {
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     if (password.length < 6) {
       return NextResponse.json(
-        { error: 'La contraseña debe tener al menos 6 caracteres' },
+        { error: 'La contrase&ntilde;a debe tener al menos 6 caracteres' },
         { status: 400 }
       )
     }
@@ -30,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     if (existingAuth) {
       return NextResponse.json(
-        { error: 'Este email ya está registrado' },
+        { error: 'Este email ya est&aacute; registrado' },
         { status: 400 }
       )
     }
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
     const verificationToken = generateVerificationToken()
 
     // Crear tienda y autenticación en una transacción
-    const result = await prisma.$transaction(async (tx: PrismaClient) => {
+    const result = await prisma.$transaction(async (tx:any) => {
       // Crear la tienda
       const store = await tx.store.create({
         data: {
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
     const emailSent = process.env.NODE_ENV === 'development' ? true : false
 
     if (!emailSent && process.env.NODE_ENV !== 'development') {
-      console.error('Error enviando email de verificación')
+      console.error('Error enviando email de verificaci&oacute;n')
       // No bloquear el registro si falla el email
     }
 

@@ -210,11 +210,12 @@ const AdminMain = () => {
     const originalPadding = document.body.style.padding
     const originalFontFamily = document.body.style.fontFamily
 
-    document.body.style.backgroundColor = styles.body.backgroundColor
-    document.body.style.minHeight = styles.body.minHeight
-    document.body.style.margin = styles.body.margin.toString()
-    document.body.style.padding = styles.body.padding.toString()
-    document.body.style.fontFamily = styles.body.fontFamily
+    // Valores directos sin referencias a styles
+    document.body.style.backgroundColor = '#1e293b'
+    document.body.style.minHeight = '100vh'
+    document.body.style.margin = '0'
+    document.body.style.padding = '0'
+    document.body.style.fontFamily = 'system-ui, -apple-system, sans-serif'
 
     return () => {
       // Restaurar estilos originales al desmontar

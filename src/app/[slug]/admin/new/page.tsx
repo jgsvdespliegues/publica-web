@@ -233,11 +233,12 @@ const AdminNew = () => {
     const originalPadding = document.body.style.padding
     const originalFontFamily = document.body.style.fontFamily
 
-    document.body.style.backgroundColor = styles.body.backgroundColor
-    document.body.style.minHeight = styles.body.minHeight
-    document.body.style.margin = styles.body.margin.toString()
-    document.body.style.padding = styles.body.padding.toString()
-    document.body.style.fontFamily = styles.body.fontFamily
+    // Valores directos sin referencias a styles
+    document.body.style.backgroundColor = '#1e293b'
+    document.body.style.minHeight = '100vh'
+    document.body.style.margin = '0'
+    document.body.style.padding = '0'
+    document.body.style.fontFamily = 'system-ui, -apple-system, sans-serif'
 
     return () => {
       // Restaurar estilos originales al desmontar
@@ -339,7 +340,7 @@ const AdminNew = () => {
           {/* Título */}
           <div style={styles.section}>
             <label htmlFor="title" style={styles.label}>
-              Título de la Card *
+              T&iacute;tulo de la Card *
             </label>
             <input
               type="text"
@@ -348,7 +349,7 @@ const AdminNew = () => {
               value={formData.title}
               onChange={handleInputChange}
               required
-              placeholder="Ej: Vinos Premium, Artesanías, etc."
+              placeholder="Ej: Vinos Premium, Artesan&iacute;as, etc."
               style={styles.input}
               onFocus={(e) => {
                 e.target.style.borderColor = '#3b82f6'
@@ -362,7 +363,7 @@ const AdminNew = () => {
           {/* Descripción */}
           <div style={styles.section}>
             <label htmlFor="description" style={styles.label}>
-              Descripción *
+              Descripci&oacute;n *
             </label>
             <textarea
               id="description"
@@ -370,7 +371,7 @@ const AdminNew = () => {
               value={formData.description}
               onChange={handleInputChange}
               required
-              placeholder="Describe tu producto o servicio. Incluye detalles importantes como precios, características, etc."
+              placeholder="Describe tu producto o servicio. Incluye detalles importantes como precios, caracter&iacute;sticas, etc."
               style={styles.textarea}
               onFocus={(e) => {
                 e.target.style.borderColor = '#3b82f6'
@@ -383,7 +384,7 @@ const AdminNew = () => {
 
           {/* Imágenes */}
           <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>Imágenes del Producto</h3>
+            <h3 style={styles.sectionTitle}>Im&aacute;genes del Producto</h3>
             <div style={styles.imageSection}>
               {[1, 2, 3].map((num) => {
                 const imageKey = `image${num}Url` as keyof typeof formData
